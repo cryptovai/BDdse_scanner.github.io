@@ -1,0 +1,53 @@
+:root {
+    --primary-color: #0D47A1;
+    --secondary-color: #1976D2;
+    --accent-color: #42A5F5;
+    --light-accent: #BBDEFB;
+    --highlight-color: #FFC107;
+    --bg-color: #f0f4f8;
+    --text-color: #1e293b;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+/* Card styles */
+.card {
+    background-color: white;
+    border-radius: 0.75rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+}
+
+/* Table styles */
+.screener-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.screener-table th {
+    background-color: var(--light-accent);
+    padding: 0.75rem;
+    text-align: left;
+    cursor: pointer;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .chart-container {
+        height: 300px;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+    }
+}

@@ -1,0 +1,18 @@
+{
+  "name": "dse-stock-screener",
+  "version": "1.0.0",
+  "description": "Dhaka Stock Exchange Stock Screener",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "chart.js": "^3.9.1",
+    "papaparse": "^5.4.1"
+  },
+  "devDependencies": {
+    "vite": "^4.0.0",
+    "sass": "^1.56.1"
+  }
+}

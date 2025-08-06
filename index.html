@@ -1,31 +1,903 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DSE Stock Screener</title>
-    <link rel="stylesheet" href="assets/css/styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-    <!-- Header Section -->
-    <header class="main-header">
-        <!-- Header content -->
-    </header>
-
-    <!-- Main Content -->
-    <main class="container">
-        <!-- Dashboard sections -->
-    </main>
-
-    <!-- Footer -->
-    <footer class="main-footer">
-        <!-- Footer content -->
-    </footer>
-
-    <!-- Scripts -->
+    <title>DSE Stock Screener - Comprehensive Bangladesh Market Analysis</title>
+    <meta name="description" content="Interactive Dhaka Stock Exchange stock screener with fundamental analysis, valuation metrics, and automatic data updates">
+    <!-- Favicon -->
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <!-- Open Graph / Social Media Meta Tags -->
+    <meta property="og:title" content="DSE Stock Screener - Bangladesh Market Analysis">
+    <meta property="og:description" content="Interactive Dhaka Stock Exchange stock screener with fundamental analysis">
+    <meta property="og:type" content="website">
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://yourusername.github.io/dse-screener/">
+    <!-- Chosen Palette: Brilliant Blues (#0D47A1, #1976D2, #42A5F5, #BBDEFB, #FFC107) -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
-    <script src="assets/js/scripts.js" type="module"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            color: #1e293b;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 450px;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .process-step {
+            border: 2px dashed #42A5F5;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            background-color: #f8fafc;
+        }
+        .arrow {
+            font-size: 2.5rem;
+            color: #1976D2;
+            align-self: center;
+        }
+        th {
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+        th:hover {
+            color: #0D47A1;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #1976D2;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .filter-controls {
+            background-color: #e3f2fd;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .sector-filter {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        .sector-btn {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            background-color: #BBDEFB;
+            color: #0D47A1;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .sector-btn:hover, .sector-btn.active {
+            background-color: #1976D2;
+            color: white;
+        }
+        .table-container {
+            overflow-x: auto;
+            max-width: 100%;
+        }
+        .data-last-updated {
+            font-size: 0.875rem;
+            color: #64748b;
+            text-align: right;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body class="bg-blue-50">
+
+    <header class="bg-[#0D47A1] text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <h1 class="text-2xl md:text-3xl font-bold">DSE Stock Screener</h1>
+                    <p class="text-blue-100">Comprehensive Bangladesh Market Analysis</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="#dashboard" class="px-4 py-2 bg-[#FFC107] text-[#0D47A1] rounded-lg font-medium hover:bg-yellow-400 transition">View Dashboard</a>
+                    <a href="#about" class="px-4 py-2 text-blue-100 hover:text-white transition">About</a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8 md:py-12">
+
+        <section id="highlights" class="mb-16">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="card p-6 text-center">
+                    <h3 class="text-lg font-semibold text-[#0D47A1] mb-2">Total Companies</h3>
+                    <p class="text-3xl font-bold" id="totalCompanies">Loading...</p>
+                </div>
+                <div class="card p-6 text-center">
+                    <h3 class="text-lg font-semibold text-[#0D47A1] mb-2">Top Sector</h3>
+                    <p class="text-3xl font-bold" id="topSector">Loading...</p>
+                </div>
+                <div class="card p-6 text-center">
+                    <h3 class="text-lg font-semibold text-[#0D47A1] mb-2">Avg. P/E Ratio</h3>
+                    <p class="text-3xl font-bold" id="avgPeRatio">Loading...</p>
+                </div>
+            </div>
+            <p class="data-last-updated" id="dataLastUpdated"></p>
+        </section>
+
+        <section id="metrics" class="mb-20">
+            <h2 class="text-3xl font-bold text-center text-[#1976D2] mb-10">Understanding the Core Metrics</h2>
+            <p class="text-center text-slate-600 max-w-2xl mx-auto mb-12">A great stock isn't just about a rising price. It's about a healthy, profitable, and growing business. Our screener focuses on four key areas to provide a holistic view of a company's performance.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="card p-6">
+                    <h3 class="font-bold text-xl text-[#0D47A1] mb-3">💰 Profitability</h3>
+                    <p class="text-slate-600">How efficiently a company turns revenue into actual profit. High profitability is a sign of a strong business model and pricing power.</p>
+                    <ul class="mt-4 text-sm list-disc list-inside text-slate-500">
+                        <li>Return on Equity (ROE)</li>
+                        <li>Return on Assets (ROA)</li>
+                        <li>Profit Margins</li>
+                        <li>Return on Capital (ROCE)</li>
+                    </ul>
+                </div>
+                <div class="card p-6">
+                    <h3 class="font-bold text-xl text-[#0D47A1] mb-3">❤️‍🩹 Financial Health</h3>
+                    <p class="text-slate-600">Measures a company's ability to manage its debt and meet financial obligations. Low debt and good coverage are signs of stability.</p>
+                    <ul class="mt-4 text-sm list-disc list-inside text-slate-500">
+                        <li>Debt-to-Equity Ratio</li>
+                        <li>Current Ratio</li>
+                        <li>Interest Coverage</li>
+                        <li>Quick Ratio</li>
+                    </ul>
+                </div>
+                <div class="card p-6">
+                    <h3 class="font-bold text-xl text-[#0D47A1] mb-3">📈 Growth</h3>
+                    <p class="text-slate-600">Tracks the expansion of a company's sales and earnings over time. Consistent growth is a key driver of long-term stock appreciation.</p>
+                    <ul class="mt-4 text-sm list-disc list-inside text-slate-500">
+                        <li>Revenue CAGR (5Y)</li>
+                        <li>Net Profit CAGR (5Y)</li>
+                        <li>EPS Growth</li>
+                        <li>Dividend Growth</li>
+                    </ul>
+                </div>
+                <div class="card p-6">
+                    <h3 class="font-bold text-xl text-[#0D47A1] mb-3">⚖️ Valuation & Returns</h3>
+                    <p class="text-slate-600">Assesses if a stock is fairly priced and how it rewards shareholders. We look for fair value and strong shareholder alignment.</p>
+                    <ul class="mt-4 text-sm list-disc list-inside text-slate-500">
+                        <li>P/E Ratio</li>
+                        <li>P/B Ratio</li>
+                        <li>Dividend Yield</li>
+                        <li>Director Holdings</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="process" class="mb-20">
+            <h2 class="text-3xl font-bold text-center text-[#1976D2] mb-10">The 3-Step Screening Process</h2>
+            <p class="text-center text-slate-600 max-w-2xl mx-auto mb-12">Our methodology is systematic. We transform raw financial data into a simple, comparable score, making it easy to identify the strongest performers at a glance.</p>
+            <div class="flex flex-col md:flex-row items-stretch justify-center gap-4 md:gap-8">
+                <div class="process-step flex-1">
+                    <div class="text-5xl mb-4">1</div>
+                    <h3 class="text-xl font-semibold text-[#0D47A1]">Collect Data</h3>
+                    <p class="text-slate-500 mt-2">We gather comprehensive financial data for all DSE-listed companies from reliable sources.</p>
+                </div>
+                <div class="arrow hidden md:block">&rarr;</div>
+                <div class="process-step flex-1">
+                    <div class="text-5xl mb-4">2</div>
+                    <h3 class="text-xl font-semibold text-[#0D47A1]">Calculate Scores</h3>
+                    <p class="text-slate-500 mt-2">Each company is scored across all metrics, with weights assigned based on importance.</p>
+                </div>
+                <div class="arrow hidden md:block">&rarr;</div>
+                <div class="process-step flex-1">
+                    <div class="text-5xl mb-4">3</div>
+                    <h3 class="text-xl font-semibold text-[#0D47A1]">Rank & Analyze</h3>
+                    <p class="text-slate-500 mt-2">Composite scores are calculated to rank companies and identify investment opportunities.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="dashboard" class="mb-20">
+            <h2 class="text-3xl font-bold text-center text-[#1976D2] mb-4">Interactive Screener Dashboard</h2>
+            <p class="text-center text-slate-600 max-w-2xl mx-auto mb-8">Use the filters below to explore DSE stocks based on your criteria. Click on any column header to sort the data.</p>
+            
+            <div class="filter-controls mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-[#0D47A1] mb-1">Search by Company</label>
+                    <input type="text" id="companySearch" placeholder="Enter company name or ticker..." class="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-[#0D47A1] mb-1">Filter by Sector</label>
+                    <div class="sector-filter" id="sectorFilters">
+                        <div class="loading-spinner"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card p-6 md:p-8">
+                <div class="table-container">
+                    <table class="w-full text-left whitespace-nowrap" id="screenerTable">
+                        <thead class="border-b-2 border-[#42A5F5]">
+                            <tr>
+                                <th class="p-3 text-sm font-semibold tracking-wide text-left" data-sort="ticker">Ticker ↕</th>
+                                <th class="p-3 text-sm font-semibold tracking-wide text-left" data-sort="sector">Sector ↕</th>
+                                <th class="p-3 text-sm font-semibold tracking-wide text-left" data-sort="directorHoldings">Dir. Hold ↕</th>
+                                <th class="p-3 text-sm font-semibold tracking-wide text-left" data-sort="roe">ROE ↕</th>
+                                <th class="p-3 text-sm font-semibold tracking-wide text-left" data-sort="roa">ROA ↕</th>
+                                <th class="p-3 text-sm font-semibold tracking-wide text-left" data-sort="debtToEquity">D/E ↕</th>
+                                <th class="p-3 text-sm font-semibold tracking-wide text-left" data-sort="currentRatio">Current ↕</th>
+                                <th class="p-3 text-sm font-semibold tracking-wide text-left" data-sort="grossMargin">Gross Margin ↕</th>
+                                <th class="p-3 text-sm font-semibold tracking-wide text-left" data-sort="netMargin">Net Margin ↕</th>
+                                <th class="p-3 text-sm font-semibold tracking-wide text-left" data-sort="revenueGrowth">Rev Growth ↕</th>
+                                <th class="p-3 text-sm font-semibold tracking-wide text-left" data-sort="epsGrowth">EPS Growth ↕</th>
+                                <th class="p-3 text-sm font-semibold tracking-wide text-left" data-sort="peRatio">P/E ↕</th>
+                                <th class="p-3 text-sm font-semibold tracking-wide text-left" data-sort="pbRatio">P/B ↕</th>
+                                <th class="p-3 text-sm font-semibold tracking-wide text-left" data-sort="dividendYield">Div Yield ↕</th>
+                                <th class="p-3 text-sm font-semibold tracking-wide text-left" data-sort="marketCap">Mkt Cap (M) ↕</th>
+                                <th class="p-3 text-sm font-semibold tracking-wide text-left bg-[#BBDEFB]" data-sort="totalScore">Score ↕</th>
+                            </tr>
+                        </thead>
+                        <tbody id="screenerTableBody">
+                            <tr>
+                                <td colspan="16" class="text-center py-8">
+                                    <div class="loading-spinner"></div>
+                                    <p>Loading stock data...</p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="data-last-updated" id="tableLastUpdated"></p>
+            </div>
+        </section>
+
+        <section id="visualizations" class="mb-12">
+            <h2 class="text-3xl font-bold text-center text-[#1976D2] mb-10">Deep Dive Visualizations</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold text-center text-[#0D47A1] mb-2">Profitability vs. Financial Health</h3>
+                    <p class="text-center text-sm text-slate-500 mb-4">This chart plots Return on Equity (ROE) against Debt-to-Equity. Ideal stocks are in the top-left quadrant: high profitability with low debt. Bubble size represents market capitalization.</p>
+                    <div class="chart-container">
+                        <canvas id="roeVsDebtChart"></canvas>
+                    </div>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold text-center text-[#0D47A1] mb-2">Valuation Analysis</h3>
+                    <p class="text-center text-sm text-slate-500 mb-4">This scatter plot shows the relationship between P/E ratio and earnings growth. Stocks in the bottom right may be undervalued relative to their growth potential.</p>
+                    <div class="chart-container">
+                        <canvas id="valuationChart"></canvas>
+                    </div>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold text-center text-[#0D47A1] mb-2">Sector Performance</h3>
+                    <p class="text-center text-sm text-slate-500 mb-4">Comparison of average scores across different sectors. Helps identify which industries are currently showing the strongest fundamentals.</p>
+                    <div class="chart-container">
+                        <canvas id="sectorChart"></canvas>
+                    </div>
+                </div>
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold text-center text-[#0D47A1] mb-2">Overall Performance Ranking</h3>
+                    <p class="text-center text-sm text-slate-500 mb-4">A direct comparison of the final 'Total Score' for each company. This provides a clear, at-a-glance view of the top-ranked companies based on our comprehensive screening model.</p>
+                    <div class="chart-container">
+                        <canvas id="totalScoreChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="card p-6 md:p-8 mb-12">
+            <h2 class="text-3xl font-bold text-center text-[#1976D2] mb-6">About This Screener</h2>
+            <div class="prose max-w-3xl mx-auto">
+                <h3 class="text-xl font-semibold text-[#0D47A1]">Methodology</h3>
+                <p>Our DSE stock screener uses a comprehensive scoring system that evaluates companies across four key dimensions: Profitability, Financial Health, Growth, and Valuation. Each company receives a score from 0-100 in each category, which are then combined into a weighted total score.</p>
+                
+                <h3 class="text-xl font-semibold text-[#0D47A1] mt-6">Data Sources</h3>
+                <p>We aggregate data from multiple reliable sources including:</p>
+                <ul>
+                    <li>Dhaka Stock Exchange (DSE) official reports</li>
+                    <li>Company annual reports and financial statements</li>
+                    <li>Bangladesh Securities and Exchange Commission (BSEC) disclosures</li>
+                    <li>Trusted financial data providers</li>
+                </ul>
+                
+                <h3 class="text-xl font-semibold text-[#0D47A1] mt-6">Automatic Updates</h3>
+                <p>The screener automatically updates its data daily by fetching the latest information from our data sources. This ensures you're always working with the most current market information.</p>
+                
+                <h3 class="text-xl font-semibold text-[#0D47A1] mt-6">Disclaimer</h3>
+                <p>This tool is for informational purposes only and should not be considered as investment advice. Always conduct your own research or consult with a qualified financial advisor before making investment decisions.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-[#0D47A1] text-white py-8">
+        <div class="container mx-auto px-4">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <h2 class="text-xl font-bold">DSE Stock Screener</h2>
+                    <p class="text-blue-100">Comprehensive Bangladesh Market Analysis</p>
+                </div>
+                <div class="text-center md:text-right">
+                    <p class="text-blue-100">Data last updated: <span id="footerLastUpdated">Loading...</span></p>
+                    <p class="text-blue-100 text-sm mt-2">© 2023 DSE Stock Screener. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Configuration
+        const DATA_SOURCE = 'https://raw.githubusercontent.com/yourusername/dse-screener-data/main/dse_stocks.csv';
+        const UPDATE_INTERVAL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+        
+        // Global variables
+        let allStockData = [];
+        let filteredStockData = [];
+        let currentSort = { key: 'totalScore', order: 'desc' };
+        let charts = {};
+        let sectors = [];
+        
+        // DOM Elements
+        const elements = {
+            totalCompanies: document.getElementById('totalCompanies'),
+            topSector: document.getElementById('topSector'),
+            avgPeRatio: document.getElementById('avgPeRatio'),
+            dataLastUpdated: document.getElementById('dataLastUpdated'),
+            tableLastUpdated: document.getElementById('tableLastUpdated'),
+            footerLastUpdated: document.getElementById('footerLastUpdated'),
+            companySearch: document.getElementById('companySearch'),
+            sectorFilters: document.getElementById('sectorFilters'),
+            screenerTableBody: document.getElementById('screenerTableBody'),
+            roeVsDebtChart: document.getElementById('roeVsDebtChart'),
+            valuationChart: document.getElementById('valuationChart'),
+            sectorChart: document.getElementById('sectorChart'),
+            totalScoreChart: document.getElementById('totalScoreChart')
+        };
+        
+        // Helper functions
+        function formatNumber(num, decimals = 2) {
+            if (num === null || num === undefined) return 'N/A';
+            return num.toLocaleString(undefined, {
+                minimumFractionDigits: decimals,
+                maximumFractionDigits: decimals
+            });
+        }
+        
+        function formatDate(date) {
+            return new Date(date).toLocaleString(undefined, {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        function calculateScore(stock) {
+            // This is a simplified scoring mechanism - you should expand this based on your actual criteria
+            let score = 0;
+            
+            // Profitability (30% weight)
+            const profitability = (stock.roe || 0) * 0.6 + (stock.roa || 0) * 0.4;
+            score += profitability * 0.3;
+            
+            // Financial Health (25% weight)
+            const health = (1 - Math.min(1, stock.debtToEquity || 0)) * 0.6 + 
+                          (Math.min(2, stock.currentRatio || 0) / 2) * 0.4;
+            score += health * 25;
+            
+            // Growth (25% weight)
+            const growth = (stock.revenueGrowth || 0) * 0.5 + (stock.epsGrowth || 0) * 0.5;
+            score += Math.min(2, Math.max(-1, growth / 10)) * 25;
+            
+            // Valuation (20% weight)
+            const valuation = (1 / Math.min(50, Math.max(5, stock.peRatio || 0)) * 20;
+            score += valuation;
+            
+            // Director holdings bonus (up to 5 points)
+            if (stock.directorHoldings > 50) {
+                score += Math.min(5, (stock.directorHoldings - 50) / 10);
+            }
+            
+            return Math.round(score);
+        }
+        
+        function analyzeData(data) {
+            // Calculate summary statistics
+            const totalCompanies = data.length;
+            
+            // Calculate average P/E ratio (excluding outliers)
+            const validPeRatios = data.filter(s => s.peRatio > 0 && s.peRatio < 100).map(s => s.peRatio);
+            const avgPeRatio = validPeRatios.length > 0 ? 
+                validPeRatios.reduce((a, b) => a + b, 0) / validPeRatios.length : 0;
+            
+            // Find top sector by average score
+            const sectorScores = {};
+            data.forEach(stock => {
+                if (!sectorScores[stock.sector]) {
+                    sectorScores[stock.sector] = { total: 0, count: 0 };
+                }
+                sectorScores[stock.sector].total += stock.totalScore;
+                sectorScores[stock.sector].count++;
+            });
+            
+            let topSector = '';
+            let highestAvgScore = 0;
+            for (const sector in sectorScores) {
+                const avgScore = sectorScores[sector].total / sectorScores[sector].count;
+                if (avgScore > highestAvgScore) {
+                    highestAvgScore = avgScore;
+                    topSector = sector;
+                }
+            }
+            
+            // Update UI
+            elements.totalCompanies.textContent = totalCompanies;
+            elements.topSector.textContent = topSector || 'N/A';
+            elements.avgPeRatio.textContent = formatNumber(avgPeRatio, 1);
+        }
+        
+        function renderTable(data) {
+            const tableBody = elements.screenerTableBody;
+            tableBody.innerHTML = '';
+            
+            if (data.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="16" class="text-center py-8 text-slate-500">
+                            No stocks match your current filters. Try adjusting your criteria.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            data.forEach(stock => {
+                const row = document.createElement('tr');
+                row.className = 'border-b hover:bg-blue-50';
+                row.innerHTML = `
+                    <td class="p-3 text-sm font-medium">${stock.ticker}</td>
+                    <td class="p-3 text-sm">${stock.sector || 'N/A'}</td>
+                    <td class="p-3 text-sm">${stock.directorHoldings ? formatNumber(stock.directorHoldings) + '%' : 'N/A'}</td>
+                    <td class="p-3 text-sm">${stock.roe ? formatNumber(stock.roe) : 'N/A'}</td>
+                    <td class="p-3 text-sm">${stock.roa ? formatNumber(stock.roa) : 'N/A'}</td>
+                    <td class="p-3 text-sm">${stock.debtToEquity ? formatNumber(stock.debtToEquity) : 'N/A'}</td>
+                    <td class="p-3 text-sm">${stock.currentRatio ? formatNumber(stock.currentRatio) : 'N/A'}</td>
+                    <td class="p-3 text-sm">${stock.grossMargin ? formatNumber(stock.grossMargin) + '%' : 'N/A'}</td>
+                    <td class="p-3 text-sm">${stock.netMargin ? formatNumber(stock.netMargin) + '%' : 'N/A'}</td>
+                    <td class="p-3 text-sm">${stock.revenueGrowth ? formatNumber(stock.revenueGrowth) + '%' : 'N/A'}</td>
+                    <td class="p-3 text-sm">${stock.epsGrowth ? formatNumber(stock.epsGrowth) + '%' : 'N/A'}</td>
+                    <td class="p-3 text-sm">${stock.peRatio ? formatNumber(stock.peRatio) : 'N/A'}</td>
+                    <td class="p-3 text-sm">${stock.pbRatio ? formatNumber(stock.pbRatio) : 'N/A'}</td>
+                    <td class="p-3 text-sm">${stock.dividendYield ? formatNumber(stock.dividendYield) + '%' : 'N/A'}</td>
+                    <td class="p-3 text-sm">${stock.marketCap ? formatNumber(stock.marketCap / 1000000) : 'N/A'}</td>
+                    <td class="p-3 text-sm font-bold bg-[#e3f2fd]">${stock.totalScore || 'N/A'}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+        
+        function sortData(key, order) {
+            currentSort = { key, order };
+            filteredStockData.sort((a, b) => {
+                // Handle null/undefined values
+                if (a[key] === null || a[key] === undefined) return order === 'asc' ? 1 : -1;
+                if (b[key] === null || b[key] === undefined) return order === 'asc' ? -1 : 1;
+                
+                if (a[key] < b[key]) return order === 'asc' ? -1 : 1;
+                if (a[key] > b[key]) return order === 'asc' ? 1 : -1;
+                return 0;
+            });
+            renderTable(filteredStockData);
+            updateCharts();
+        }
+        
+        function filterData() {
+            const searchTerm = elements.companySearch.value.toLowerCase();
+            const activeSectors = Array.from(document.querySelectorAll('.sector-btn.active')).map(btn => btn.dataset.sector);
+            
+            filteredStockData = allStockData.filter(stock => {
+                // Search filter
+                const matchesSearch = !searchTerm || 
+                    stock.ticker.toLowerCase().includes(searchTerm) || 
+                    (stock.name && stock.name.toLowerCase().includes(searchTerm));
+                
+                // Sector filter
+                const matchesSector = activeSectors.length === 0 || 
+                    (stock.sector && activeSectors.includes(stock.sector));
+                
+                return matchesSearch && matchesSector;
+            });
+            
+            sortData(currentSort.key, currentSort.order);
+        }
+        
+        function renderSectorFilters() {
+            const sectorCounts = {};
+            allStockData.forEach(stock => {
+                if (stock.sector) {
+                    sectorCounts[stock.sector] = (sectorCounts[stock.sector] || 0) + 1;
+                }
+            });
+            
+            // Sort sectors by count descending
+            const sortedSectors = Object.entries(sectorCounts)
+                .sort((a, b) => b[1] - a[1])
+                .map(([sector]) => sector);
+            
+            sectors = sortedSectors;
+            
+            elements.sectorFilters.innerHTML = '';
+            
+            // Add "All" option
+            const allBtn = document.createElement('div');
+            allBtn.className = 'sector-btn active';
+            allBtn.textContent = 'All Sectors';
+            allBtn.dataset.sector = '';
+            allBtn.addEventListener('click', () => {
+                document.querySelectorAll('.sector-btn').forEach(btn => btn.classList.remove('active'));
+                allBtn.classList.add('active');
+                filterData();
+            });
+            elements.sectorFilters.appendChild(allBtn);
+            
+            // Add sector buttons
+            sortedSectors.forEach(sector => {
+                const btn = document.createElement('div');
+                btn.className = 'sector-btn';
+                btn.textContent = sector;
+                btn.dataset.sector = sector;
+                btn.addEventListener('click', () => {
+                    btn.classList.toggle('active');
+                    document.querySelector('.sector-btn[data-sector=""]').classList.remove('active');
+                    filterData();
+                });
+                elements.sectorFilters.appendChild(btn);
+            });
+        }
+        
+        function updateCharts() {
+            // Limit to top 20 for better visibility
+            const displayData = filteredStockData.slice(0, 20);
+            
+            // Update ROE vs Debt chart
+            if (charts.roeVsDebt) {
+                charts.roeVsDebt.data.datasets = displayData.map(stock => ({
+                    label: stock.ticker,
+                    data: [{
+                        x: stock.roe || 0,
+                        y: stock.debtToEquity || 0,
+                        r: Math.sqrt(stock.marketCap || 0) / 1000
+                    }],
+                    backgroundColor: `rgba(${Math.floor(Math.random()*200)+50}, ${Math.floor(Math.random()*200)+50}, ${Math.floor(Math.random()*200)+50}, 0.7)`,
+                    borderColor: 'rgba(0,0,0,0.1)'
+                }));
+                charts.roeVsDebt.update();
+            }
+            
+            // Update Valuation chart
+            if (charts.valuation) {
+                charts.valuation.data.datasets = [{
+                    label: 'P/E vs EPS Growth',
+                    data: displayData.map(stock => ({
+                        x: stock.peRatio || 0,
+                        y: stock.epsGrowth || 0,
+                        r: Math.sqrt(stock.marketCap || 0) / 1000
+                    })),
+                    backgroundColor: '#42A5F5',
+                    borderColor: '#1976D2'
+                }];
+                charts.valuation.update();
+            }
+            
+            // Update Sector chart
+            if (charts.sector) {
+                const sectorAverages = {};
+                displayData.forEach(stock => {
+                    if (!sectorAverages[stock.sector]) {
+                        sectorAverages[stock.sector] = { sum: 0, count: 0 };
+                    }
+                    sectorAverages[stock.sector].sum += stock.totalScore;
+                    sectorAverages[stock.sector].count++;
+                });
+                
+                const sectorData = Object.entries(sectorAverages)
+                    .map(([sector, { sum, count }]) => ({
+                        sector,
+                        avgScore: sum / count
+                    }))
+                    .sort((a, b) => b.avgScore - a.avgScore);
+                
+                charts.sector.data.labels = sectorData.map(d => d.sector);
+                charts.sector.data.datasets[0].data = sectorData.map(d => d.avgScore);
+                charts.sector.update();
+            }
+            
+            // Update Total Score chart
+            if (charts.totalScore) {
+                charts.totalScore.data.labels = displayData.map(s => s.ticker);
+                charts.totalScore.data.datasets[0].data = displayData.map(s => s.totalScore);
+                charts.totalScore.update();
+            }
+        }
+        
+        function initializeCharts() {
+            // ROE vs Debt Chart
+            charts.roeVsDebt = new Chart(elements.roeVsDebtChart, {
+                type: 'bubble',
+                data: { datasets: [] },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'top' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const stock = filteredStockData[context.dataIndex];
+                                    return `${stock.ticker}: ROE ${formatNumber(stock.roe || 0)}%, D/E ${formatNumber(stock.debtToEquity || 0)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            title: { display: true, text: 'Return on Equity (ROE %)' },
+                            min: 0
+                        },
+                        y: { 
+                            title: { display: true, text: 'Debt to Equity Ratio' },
+                            min: 0
+                        }
+                    }
+                }
+            });
+            
+            // Valuation Chart
+            charts.valuation = new Chart(elements.valuationChart, {
+                type: 'bubble',
+                data: { datasets: [] },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const stock = filteredStockData[context.dataIndex];
+                                    return `${stock.ticker}: P/E ${formatNumber(stock.peRatio || 0)}, EPS Growth ${formatNumber(stock.epsGrowth || 0)}%`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: { 
+                            title: { display: true, text: 'P/E Ratio' },
+                            min: 0
+                        },
+                        y: { 
+                            title: { display: true, text: 'EPS Growth (%)' },
+                            min: -20
+                        }
+                    }
+                }
+            });
+            
+            // Sector Chart
+            charts.sector = new Chart(elements.sectorChart, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Average Score',
+                        data: [],
+                        backgroundColor: '#42A5F5',
+                        borderColor: '#1976D2',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Avg. Score: ${formatNumber(context.raw)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Average Score' }
+                        }
+                    }
+                }
+            });
+            
+            // Total Score Chart
+            charts.totalScore = new Chart(elements.totalScoreChart, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Total Score',
+                        data: [],
+                        backgroundColor: '#42A5F5',
+                        borderColor: '#1976D2',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Score: ${context.raw}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Total Score' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function processData(rawData) {
+            // Parse and clean the data
+            allStockData = rawData.map(row => {
+                // Convert numeric fields
+                const numericFields = [
+                    'directorHoldings', 'roe', 'roa', 'debtToEquity', 'currentRatio',
+                    'grossMargin', 'netMargin', 'revenueGrowth', 'epsGrowth',
+                    'peRatio', 'pbRatio', 'dividendYield', 'marketCap'
+                ];
+                
+                const processed = { ...row };
+                
+                numericFields.forEach(field => {
+                    if (row[field]) {
+                        processed[field] = parseFloat(row[field]);
+                    }
+                });
+                
+                // Calculate total score
+                processed.totalScore = calculateScore(processed);
+                
+                return processed;
+            });
+            
+            // Store the last updated time
+            const lastUpdated = new Date().toISOString();
+            localStorage.setItem('dseDataLastUpdated', lastUpdated);
+            
+            // Update UI
+            elements.dataLastUpdated.textContent = `Data last updated: ${formatDate(lastUpdated)}`;
+            elements.tableLastUpdated.textContent = `Data last updated: ${formatDate(lastUpdated)}`;
+            elements.footerLastUpdated.textContent = formatDate(lastUpdated);
+            
+            // Initialize filters and render
+            filteredStockData = [...allStockData];
+            renderSectorFilters();
+            sortData('totalScore', 'desc');
+            analyzeData(allStockData);
+        }
+        
+        function loadData() {
+            // Check if we have recent cached data
+            const lastUpdated = localStorage.getItem('dseDataLastUpdated');
+            const cachedData = localStorage.getItem('dseData');
+            
+            if (cachedData && lastUpdated && 
+                (new Date() - new Date(lastUpdated)) < UPDATE_INTERVAL) {
+                // Use cached data if it's recent enough
+                processData(JSON.parse(cachedData));
+                return;
+            }
+            
+            // Fetch fresh data
+            fetch(DATA_SOURCE)
+                .then(response => response.text())
+                .then(csvText => {
+                    // Parse CSV
+                    Papa.parse(csvText, {
+                        header: true,
+                        skipEmptyLines: true,
+                        complete: function(results) {
+                            // Cache the data
+                            localStorage.setItem('dseData', JSON.stringify(results.data));
+                            processData(results.data);
+                        },
+                        error: function(error) {
+                            console.error('Error parsing CSV:', error);
+                            if (cachedData) {
+                                // Fall back to cached data if available
+                                processData(JSON.parse(cachedData));
+                            } else {
+                                alert('Failed to load data. Please try again later.');
+                            }
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    if (cachedData) {
+                        // Fall back to cached data if available
+                        processData(JSON.parse(cachedData));
+                    } else {
+                        alert('Failed to load data. Please try again later.');
+                    }
+                });
+        }
+        
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize charts
+            initializeCharts();
+            
+            // Load data
+            loadData();
+            
+            // Set up event listeners
+            elements.companySearch.addEventListener('input', filterData);
+            
+            document.querySelectorAll('#screenerTable th[data-sort]').forEach(header => {
+                header.addEventListener('click', () => {
+                    const key = header.dataset.sort;
+                    const order = currentSort.key === key && currentSort.order === 'asc' ? 'desc' : 'asc';
+                    sortData(key, order);
+                    
+                    // Update sort indicator
+                    document.querySelectorAll('#screenerTable th').forEach(th => {
+                        th.textContent = th.textContent.replace(' ↑', '').replace(' ↓', '');
+                    });
+                    
+                    header.textContent = header.textContent.replace(' ↕', '') + (order === 'asc' ? ' ↑' : ' ↓');
+                });
+            });
+            
+            // Set up periodic refresh (every 24 hours)
+            setInterval(loadData, UPDATE_INTERVAL);
+        });
+    </script>
+
 </body>
 </html>
